@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+langchain
+langgraph
+langchain-google-genai
+google-generativeai
+chromadb
+sentence-transformers
+tree-sitter
+tree-sitter-python
+gitpython

@@ -219,3 +219,4 @@ __marimo__/
 venv/
 chroma_db/
 *.pyc
+cloned_repos/

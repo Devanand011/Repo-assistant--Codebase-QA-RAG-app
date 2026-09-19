@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from ingestion.repo_cloner import clone_repo
 from ingestion.chunker import chunk_repo
 from retrieval.vector_store import embed_and_store
-from retrieval.qa_engine import answer_question
+from agent.graph import answer_question_with_agent
 
 app = FastAPI(title="Repo Assistant API")
 
@@ -56,7 +56,7 @@ def ask_question(request: AskRequest):
     Answers a question about an already-indexed repo.
     """
     try:
-        result = answer_question(request.question, repo_name=request.repo_name)
+        result = answer_question_with_agent(request.question, repo_name=request.repo_name)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Question answering failed: {str(e)}")

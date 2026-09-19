@@ -39,18 +39,57 @@ def chunk_python_file(file_path: str, repo_root: str) -> list[dict]:
 
 
 def chunk_repo(repo_path: str) -> list[dict]:
-    """
-    Walks every .py file in the repo and chunks it.
-    """
     all_chunks = []
     for dirpath, _, filenames in os.walk(repo_path):
         for filename in filenames:
+            file_path = os.path.join(dirpath, filename)
             if filename.endswith(".py"):
-                file_path = os.path.join(dirpath, filename)
                 all_chunks.extend(chunk_python_file(file_path, repo_path))
+            elif filename.lower() == "readme.md":
+                all_chunks.extend(chunk_markdown_file(file_path, repo_path))
 
     return all_chunks
 
+def chunk_markdown_file(file_path: str, repo_root: str) -> list[dict]:
+    """
+    Splits a markdown file into sections by heading, so high-level
+    'what does this repo do' style questions have something real to retrieve.
+    """
+    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+        content = f.read()
+
+    relative_path = os.path.relpath(file_path, repo_root)
+    lines = content.split("\n")
+
+    sections = []
+    current_heading = "Introduction"
+    current_lines = []
+    current_start = 1
+
+    for i, line in enumerate(lines, start=1):
+        if line.startswith("#"):
+            if current_lines:
+                sections.append((current_heading, current_start, i - 1, "\n".join(current_lines)))
+            current_heading = line.lstrip("#").strip()
+            current_lines = [line]
+            current_start = i
+        else:
+            current_lines.append(line)
+    if current_lines:
+        sections.append((current_heading, current_start, len(lines), "\n".join(current_lines)))
+
+    return [
+        {
+            "file": relative_path,
+            "name": heading,
+            "type": "markdown_section",
+            "start_line": start,
+            "end_line": end,
+            "code": text,
+        }
+        for heading, start, end, text in sections
+        if text.strip()
+    ]
 
 if __name__ == "__main__":
     chunks = chunk_repo("cloned_repos/fastapi")
